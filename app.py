@@ -107,13 +107,13 @@ class Simulation:
         try:
             f_x1 = round(self.x_lambda(x1), precision)
             f_x2 = round(self.x_lambda(x2), precision)
+            if(math.copysign(1.0, f_x1) == math.copysign(1.0, f_x2)):
+                tkinter.messagebox.showwarning("Warning", message=f"Regula falsi method may not work: f(xl) and f(xr) has the same sign! (f(xl)={f_x1}, f(xr)={f_x2})")
             x3 = round(get_regula_falsi(x1, x2, x_lambda=self.x_lambda), precision)
             f_x3 = round(self.x_lambda(x3), precision)
         except ZeroDivisionError:
             tkinter.messagebox.showerror("Error", message="Cannot push first iteration: Zero division error")
             return
-        if(math.copysign(1.0, f_x1) == math.copysign(1.0, f_x2)):
-            tkinter.messagebox.showerror("Warning", message=f"Regula falsi method may not work: f(xl) and f(xr) has the same sign! (f(xl)={f_x1}, f(xr)={f_x2})")
         self.simulation_result.clear()
         for i in treeview.get_children():
             treeview.delete(i)
