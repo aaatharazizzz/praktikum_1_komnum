@@ -7,7 +7,6 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import numpy
 import sympy
 import sympy.parsing.sympy_parser as sympy_parser
-from sympy.printing import latex
 
 class RegulaFalsiResult:
     def __init__(self, xl, xr, f_xl, f_xr, xm, f_xm):
@@ -56,10 +55,8 @@ class Simulation:
         self.ax.plot(result.xm, 0, color='y', marker="s", label="xm")
         self.ax.legend(loc="upper left")
         self.fig.canvas.draw()
-    def push_result(self, result, treeview):
-        self.simulation_result.append(RegulaFalsiResult(
-            result.xl, result.xr, result.f_xl, result.f_xr, result.xm, result.f_xm
-        )) 
+    def push_result(self, result : RegulaFalsiResult, treeview):
+        self.simulation_result.append(result) 
         treeview.insert(parent='', index='end', iid=len(self.simulation_result)-1, values=(
             len(self.simulation_result), result.xl, result.xr, result.f_xl, result.f_xr, result.xm, result.f_xm
         ))
@@ -123,6 +120,29 @@ class Simulation:
         self.formula_str = formula_str
         self.refresh_figure(1)
         self.simulation_started = True
+
+def on_start(sim : Simulation, formula_str, x1_str, x2_str, precision_str, treeview):
+    try:
+        x1 = float(x1_str)
+        x2 = float(x2_str)
+    except ValueError:
+        tkinter.messagebox.showerror("Error", message="Cannot convert xl or xr to float")
+        return
+    try:
+        precision = int(precision_str)
+    except ValueError:
+        tkinter.messagebox.showerror("Error", message="Cannot convert precision to int")
+        return
+    sim.start(formula_str, x1, x2, precision, treeview)
+def on_iter_view(sim : Simulation, iter_no_str):
+    try:
+        iter_no = int(iter_no_str)
+    except ValueError:
+        tkinter.messagebox.showerror("Error", message="Cannot convert iter no. to int")
+        return
+    sim.refresh_figure(iter_no)
+
+# Simulation
 regula_falsi_sim = Simulation()
 
 window = tkinter.Tk()
@@ -157,12 +177,12 @@ canvas_frame.grid(row=0, column=0)
 formula_input_label = tkinter.Label(user_input_frame, text="Enter f(x) function")
 formula_input_entry = tkinter.Entry(user_input_frame)
 start_variable_frame = tkinter.LabelFrame(user_input_frame, text="Start values")
-start_x1_label = tkinter.Label(start_variable_frame, text="x1")
+start_x1_label = tkinter.Label(start_variable_frame, text="xl")
 start_x1_entry = tkinter.Entry(start_variable_frame, width=15)
-start_x2_label = tkinter.Label(start_variable_frame, text="x2")
+start_x2_label = tkinter.Label(start_variable_frame, text="xr")
 start_x2_entry = tkinter.Entry(start_variable_frame, width=15)
 round_label = tkinter.Label(user_input_frame, text="Precision")
-round_entry = tkinter.Entry(user_input_frame)
+round_entry = tkinter.Entry(user_input_frame, width=5)
 round_entry.insert(tkinter.END, "6")
 
 output_table_treeview['columns'] = ("No.", "xl", "xr", "f(xl)", "f(xr)", "xm", "f(xm)")
@@ -188,27 +208,6 @@ fig_canvas.get_tk_widget().grid(row=0, column=0)
 graph_toolbar = NavigationToolbar2Tk(fig_canvas, canvas_frame, pack_toolbar=False)
 graph_toolbar.grid(row=1, column=0)
 graph_toolbar.update()
-
-def on_start(sim : Simulation, formula_str, x1_str, x2_str, precision_str, treeview):
-    try:
-        x1 = float(x1_str)
-        x2 = float(x2_str)
-    except ValueError:
-        tkinter.messagebox.showerror("Error", message="Cannot convert x1 or x2 to float")
-        return
-    try:
-        precision = int(precision_str)
-    except ValueError:
-        tkinter.messagebox.showerror("Error", message="Cannot convert precision to int")
-        return
-    sim.start(formula_str, x1, x2, precision, treeview)
-def on_iter_view(sim : Simulation, iter_no_str):
-    try:
-        iter_no = int(iter_no_str)
-    except ValueError:
-        tkinter.messagebox.showerror("Error", message="Cannot convert iter no. to int")
-        return
-    sim.refresh_figure(iter_no)
 
 start_button = tkinter.Button(user_input_frame, 
     text="Start", 
